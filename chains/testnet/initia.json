@@ -1,0 +1,27 @@
+{
+  "chain_name": "initia-testnet",
+  "api": [
+    "https://api.initia.unitynodes.com",
+    "https://initia-testnet.api.kjnodes.com"
+  ],
+  "rpc": [
+    "https://rpc.initia.unitynodes.com",
+    "https://initia-testnet.rpc.unitynodes.com"
+  ],
+  "coingecko": "",
+  "snapshot_provider": "UnityNodes",
+  "sdk_version": "0.46.0",
+  "coin_type": "118",
+  "min_tx_fee": "800",
+  "addr_prefix": "init",
+  "logo": "/logos/initia.jpg",
+  "assets": [
+    {
+      "base": "uinit",
+      "symbol": "INIT",
+      "exponent": "6",
+      "coingecko_id": "",
+      "logo": "/logos/initia.jpg"
+    }
+  ]
+}

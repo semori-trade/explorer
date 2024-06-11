@@ -33,14 +33,14 @@ export interface DirectoryChain {
   denom: string;
   display: string;
   explorers:
-    | {
-        name?: string | undefined;
-        kind?: string | undefined;
-        url?: string | undefined;
-        tx_page?: string | undefined;
-        account_page?: string | undefined;
-      }[]
-    | undefined;
+  | {
+    name?: string | undefined;
+    kind?: string | undefined;
+    url?: string | undefined;
+    tx_page?: string | undefined;
+    account_page?: string | undefined;
+  }[]
+  | undefined;
   height: number;
   image: string;
   name: string;
@@ -62,7 +62,7 @@ export interface ChainConfig {
   coinType: string;
   assets: Asset[];
   themeColor?: string;
-  features?: string[]
+  features?: string[];
   endpoints: {
     rest?: Endpoint[];
     rpc?: Endpoint[];
@@ -77,15 +77,15 @@ export interface ChainConfig {
   exponent: string;
   excludes?: string;
   providerChain: {
-    api: Endpoint[]
+    api: Endpoint[];
   };
   // keplr config
-  keplrFeatures?: string[],
+  keplrFeatures?: string[];
   keplrPriceStep?: {
-    low: number,
-    average: number,
-    high: number,
-  },
+    low: number;
+    average: number;
+    high: number;
+  };
 }
 
 export interface LocalConfig {
@@ -94,8 +94,8 @@ export interface LocalConfig {
   alias: string;
   api: string[] | Endpoint[];
   provider_chain: {
-    api: string[] | Endpoint[]
-  }
+    api: string[] | Endpoint[];
+  };
   assets: {
     base: string;
     coingecko_id: string;
@@ -113,11 +113,11 @@ export interface LocalConfig {
   registry_name?: string;
   features?: string[];
   keplr_price_step?: {
-    low: number,
-    average: number,
-    high: number,
-  },
-  keplr_features: string[],
+    low: number;
+    average: number;
+    high: number;
+  };
+  keplr_features: string[];
 }
 
 function apiConverter(api: any[]) {
@@ -138,7 +138,7 @@ function apiConverter(api: any[]) {
 
 export function fromLocal(lc: LocalConfig): ChainConfig {
   const conf = {} as ChainConfig;
-  if(lc.assets && Array.isArray(lc.assets)) {
+  if (lc.assets && Array.isArray(lc.assets)) {
     conf.assets = lc.assets.map((x) => ({
       name: x.base,
       base: x.base,
@@ -154,10 +154,11 @@ export function fromLocal(lc: LocalConfig): ChainConfig {
     }));
   }
   conf.versions = {
-    cosmosSdk: lc.sdk_version
-  }
+    cosmosSdk: lc.sdk_version,
+  };
   conf.bech32Prefix = lc.addr_prefix;
-  conf.bech32ConsensusPrefix = lc.consensus_prefix ?? lc.addr_prefix + 'valcons';
+  conf.bech32ConsensusPrefix =
+    lc.consensus_prefix ?? lc.addr_prefix + 'valcons';
   conf.chainName = lc.chain_name;
   conf.coinType = lc.coin_type;
   conf.prettyName = lc.registry_name || lc.chain_name;
@@ -165,12 +166,12 @@ export function fromLocal(lc: LocalConfig): ChainConfig {
     rest: apiConverter(lc.api),
     rpc: apiConverter(lc.rpc),
   };
-  if(lc.provider_chain) {
+  if (lc.provider_chain) {
     conf.providerChain = {
-      api: apiConverter(lc.provider_chain.api)
-    }
+      api: apiConverter(lc.provider_chain.api),
+    };
   }
-  conf.features = lc.features
+  conf.features = lc.features;
   conf.logo = lc.logo;
   conf.keplrFeatures = lc.keplr_features;
   conf.keplrPriceStep = lc.keplr_price_step;
@@ -209,10 +210,10 @@ function pathConvert(path: string | undefined) {
 export function getLogo(
   conf:
     | {
-        svg?: string;
-        png?: string;
-        jpeg?: string;
-      }
+      svg?: string;
+      png?: string;
+      jpeg?: string;
+    }
     | undefined
 ) {
   if (conf) {
@@ -249,30 +250,29 @@ export enum LoadingStatus {
   Loading,
   Loaded,
 }
-export enum NetworkType {
-  Mainnet,
-  Testnet,
-}
 export enum ConfigSource {
   MainnetCosmosDirectory = 'https://chains.cosmos.directory',
   TestnetCosmosDirectory = 'https://chains.testcosmos.directory',
   Local = 'local',
 }
 
+export enum NetworkType {
+  Mainnet,
+  Testnet,
+}
+
 export const useDashboard = defineStore('dashboard', {
   state: () => {
-    const favMap = JSON.parse(
-      localStorage.getItem('favoriteMap') ||
-        '{"cosmos":true, "osmosis":true}'
-    );
     return {
       status: LoadingStatus.Empty,
       source: ConfigSource.MainnetCosmosDirectory,
-      networkType: NetworkType.Mainnet,
-      favoriteMap: favMap as Record<string, boolean>,
+      favoriteMap: {} as Record<string, boolean>,
       chains: {} as Record<string, ChainConfig>,
       prices: {} as Record<string, any>,
-      coingecko: {} as Record<string, {coinId: string, exponent: number, symbol: string}>,
+      coingecko: {} as Record<
+        string,
+        { coinId: string; exponent: number; symbol: string }
+      >,
     };
   },
   getters: {
@@ -286,28 +286,35 @@ export const useDashboard = defineStore('dashboard', {
       // await this.loadingFromRegistry()
     },
     loadingPrices() {
-      const coinIds = [] as string[]
-      const keys = Object.keys(this.chains) // load all blockchain
-      // Object.keys(this.favoriteMap) //only load favorite once it has too many chains
-      keys.forEach(k => {
-        if(Array.isArray(this.chains[k]?.assets)) this.chains[k].assets.forEach(a => {
-          if(a.coingecko_id !== undefined && a.coingecko_id.length > 0) {
-            coinIds.push(a.coingecko_id)
-            a.denom_units.forEach(u => {
-              this.coingecko[u.denom] = {
-                coinId: a.coingecko_id || '',
-                exponent: u.exponent,
-                symbol: a.symbol
-              }
-            })
-          } 
-        })
-      })
+      const coinIds = [] as string[];
+      const keys = Object.keys(this.chains); // load all blockchain
 
-      const currencies = ['usd, cny'] // usd,cny,eur,jpy,krw,sgd,hkd
-      get(`https://api.coingecko.com/api/v3/simple/price?include_24hr_change=true&vs_currencies=${currencies.join(',')}&ids=${coinIds.join(",")}`).then(x => {
-        this.prices = x
-      })
+      console.log('keys in loadingPrices', this.chains);
+      // Object.keys(this.favoriteMap) //only load favorite once it has too many chains
+      keys.forEach((k) => {
+        if (Array.isArray(this.chains[k]?.assets))
+          this.chains[k].assets.forEach((a) => {
+            if (a.coingecko_id !== undefined && a.coingecko_id.length > 0) {
+              coinIds.push(a.coingecko_id);
+              a.denom_units.forEach((u) => {
+                this.coingecko[u.denom] = {
+                  coinId: a.coingecko_id || '',
+                  exponent: u.exponent,
+                  symbol: a.symbol,
+                };
+              });
+            }
+          });
+      });
+
+      const currencies = ['usd, cny']; // usd,cny,eur,jpy,krw,sgd,hkd
+      get(
+        `https://api.coingecko.com/api/v3/simple/price?include_24hr_change=true&vs_currencies=${currencies.join(
+          ','
+        )}&ids=${coinIds.join(',')}`
+      ).then((x) => {
+        this.prices = x;
+      });
     },
     async loadingFromRegistry() {
       if (this.status === LoadingStatus.Empty) {
@@ -321,45 +328,47 @@ export const useDashboard = defineStore('dashboard', {
       }
     },
     async loadingFromLocal() {
-      if(window.location.hostname.search("testnet") > -1) {
-        this.networkType = NetworkType.Testnet
-      }
-      const source: Record<string, LocalConfig> =
-        this.networkType === NetworkType.Mainnet
-          ? import.meta.glob('../../chains/mainnet/*.json', { eager: true })
-          : import.meta.glob('../../chains/testnet/*.json', { eager: true });
+      const source: Record<string, LocalConfig> = import.meta.glob(
+        '../../chains/**/*.json',
+        { eager: true }
+      );
+
       Object.values<LocalConfig>(source).forEach((x: LocalConfig) => {
         this.chains[x.chain_name] = fromLocal(x);
       });
       this.setupDefault();
       this.status = LoadingStatus.Loaded;
     },
-    async loadLocalConfig(network: NetworkType) {
-      const config: Record<string, ChainConfig> = {} 
-      const source: Record<string, LocalConfig> =
-        network === NetworkType.Mainnet
-          ? import.meta.glob('../../chains/mainnet/*.json', { eager: true })
-          : import.meta.glob('../../chains/testnet/*.json', { eager: true });
+    async loadLocalConfig() {
+      const config: Record<string, ChainConfig> = {};
+      const source: Record<string, LocalConfig> = import.meta.glob(
+        '../../chains/**/*.json',
+        { eager: true }
+      );
       Object.values<LocalConfig>(source).forEach((x: LocalConfig) => {
         config[x.chain_name] = fromLocal(x);
       });
-      return config
+      return config;
     },
     setupDefault() {
       if (this.length > 0) {
         const blockchain = useBlockchain();
-        const keys = Object.keys(this.favoriteMap)
+        const keys = Object.keys(this.favoriteMap);
         for (let i = 0; i < keys.length; i++) {
-          if (!blockchain.chainName && this.chains[keys[i]] && this.favoriteMap[keys[i]]) {
+          if (
+            !blockchain.chainName &&
+            this.chains[keys[i]] &&
+            this.favoriteMap[keys[i]]
+          ) {
             blockchain.setCurrent(keys[i]);
-            break
+            break;
           }
         }
         if (!blockchain.chainName) {
           const [first] = Object.keys(this.chains);
           blockchain.setCurrent(first);
         }
-        this.loadingPrices()
+        this.loadingPrices();
       }
     },
     setConfigSource(newSource: ConfigSource) {
